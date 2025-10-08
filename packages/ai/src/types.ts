@@ -22,6 +22,7 @@ export interface Tool {
     description: string;
     parameters: Record<string, any>; // JSON Schema
   };
+  execute?: (args: any) => Promise<string> | string;
 }
 
 export interface ChatCompletionOptions {
@@ -39,6 +40,7 @@ export interface ChatCompletionOptions {
     | "auto"
     | "none"
     | { type: "function"; function: { name: string } };
+  maxIterations?: number; // For automatic tool execution (default: 5)
   metadata?: Record<string, any>;
 }
 

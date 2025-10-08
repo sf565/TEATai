@@ -25,6 +25,7 @@ export const AVAILABLE_TOOLS: Tool[] = [
         required: ["location"],
       },
     },
+    execute: executeGetWeather,
   },
   {
     type: "function",
@@ -44,6 +45,7 @@ export const AVAILABLE_TOOLS: Tool[] = [
         required: ["expression"],
       },
     },
+    execute: executeCalculate,
   },
   {
     type: "function",
@@ -67,6 +69,7 @@ export const AVAILABLE_TOOLS: Tool[] = [
         required: ["query"],
       },
     },
+    execute: executeSearch,
   },
   {
     type: "function",
@@ -85,6 +88,7 @@ export const AVAILABLE_TOOLS: Tool[] = [
         required: [],
       },
     },
+    execute: executeGetCurrentTime,
   },
 ];
 
@@ -207,38 +211,8 @@ export async function executeGetCurrentTime(args: {
   }
 }
 
-/**
- * Execute a tool by name
- */
-export async function executeTool(
-  toolName: string,
-  argsJson: string
-): Promise<string> {
-  try {
-    const args = JSON.parse(argsJson);
-
-    switch (toolName) {
-      case "get_weather":
-        return await executeGetWeather(args);
-      case "calculate":
-        return await executeCalculate(args);
-      case "search":
-        return await executeSearch(args);
-      case "get_current_time":
-        return await executeGetCurrentTime(args);
-      default:
-        return JSON.stringify({
-          error: true,
-          message: `Unknown tool: ${toolName}`,
-        });
-    }
-  } catch (error: any) {
-    return JSON.stringify({
-      error: true,
-      message: `Tool execution failed: ${error.message}`,
-    });
-  }
-}
+// Note: Tool execution is now handled automatically by streamChat
+// when tools have execute functions defined
 
 /**
  * Get tool by name

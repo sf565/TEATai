@@ -113,14 +113,15 @@ console.log(result.usage.totalTokens);
 
 ##### `streamChat(options): AsyncIterable<StreamChunk>`
 
-Structured streaming with JSON chunks.
+Structured streaming with JSON chunks. **Automatically executes tools** if they have `execute` functions.
 
 ```typescript
 for await (const chunk of ai.streamChat({
   model: "gpt-3.5-turbo",
   messages: [{ role: "user", content: "Hello" }],
-  tools: [...],           // Optional
-  toolChoice: "auto"      // Optional: "auto" | "none" | { type, function }
+  tools: [...],            // Optional: Tools with execute functions
+  toolChoice: "auto",      // Optional: "auto" | "none" | { type, function }
+  maxIterations: 5,        // Optional: Max tool calling loops (default: 5)
 })) {
   switch (chunk.type) {
     case "content":
@@ -130,6 +131,7 @@ for await (const chunk of ai.streamChat({
     case "tool_call":
       console.log("Tool:", chunk.toolCall.function.name);
       console.log("Args:", chunk.toolCall.function.arguments);
+      // Tool is executed automatically if execute function is defined!
       break;
     case "done":
       console.log("Finish:", chunk.finishReason);
@@ -141,6 +143,14 @@ for await (const chunk of ai.streamChat({
   }
 }
 ```
+
+**Automatic Tool Execution:** If tools have `execute` functions, `streamChat` will:
+
+1. Detect tool calls from the AI
+2. Execute the tools automatically
+3. Add results to the conversation
+4. Continue streaming the final response
+5. Repeat up to `maxIterations` times
 
 ##### `generateText(options): Promise<TextGenerationResult>`
 
@@ -326,10 +336,12 @@ See `packages/ai-react/README.md` for full documentation and backend examples.
 
 ## Advanced Usage
 
-### Tool Calling with Multi-Turn Conversations
+### Automatic Tool Calling
+
+Define tools with `execute` functions and `streamChat` handles everything automatically:
 
 ```typescript
-import type { Tool, ToolCall } from "@tanstack/ai";
+import type { Tool } from "@tanstack/ai";
 
 const tools: Tool[] = [
   {
@@ -345,74 +357,56 @@ const tools: Tool[] = [
         required: ["location"],
       },
     },
+    execute: async ({ location }: { location: string }) => {
+      const weather = await fetchWeather(location);
+      return JSON.stringify(weather);
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "calculate",
+      description: "Perform calculations",
+      parameters: {
+        type: "object",
+        properties: {
+          expression: { type: "string" },
+        },
+        required: ["expression"],
+      },
+    },
+    execute: async ({ expression }: { expression: string }) => {
+      const result = eval(expression);
+      return JSON.stringify({ result });
+    },
   },
 ];
 
-const messages = [{ role: "user", content: "What's the weather in Paris?" }];
-
-let continueLoop = true;
-
-while (continueLoop) {
-  const toolCalls: ToolCall[] = [];
-  const toolCallsMap = new Map();
-
-  for await (const chunk of ai.streamChat({
-    model: "gpt-3.5-turbo",
-    messages,
-    tools,
-  })) {
-    if (chunk.type === "tool_call") {
-      // Accumulate tool call chunks
-      const existing = toolCallsMap.get(chunk.index) || {
-        id: chunk.toolCall.id,
-        name: "",
-        args: "",
-      };
-      if (chunk.toolCall.function.name) {
-        existing.name = chunk.toolCall.function.name;
-      }
-      existing.args += chunk.toolCall.function.arguments;
-      toolCallsMap.set(chunk.index, existing);
-    } else if (chunk.type === "content") {
-      process.stdout.write(chunk.delta);
-    } else if (chunk.type === "done") {
-      if (chunk.finishReason === "tool_calls") {
-        // Convert map to tool calls array
-        toolCallsMap.forEach((call) => {
-          toolCalls.push({
-            id: call.id,
-            type: "function",
-            function: { name: call.name, arguments: call.args },
-          });
-        });
-      } else {
-        continueLoop = false;
-      }
-    }
+// Tools are executed automatically!
+for await (const chunk of ai.streamChat({
+  model: "gpt-3.5-turbo",
+  messages: [
+    { role: "user", content: "What's the weather in Paris and what's 2+2?" },
+  ],
+  tools,
+  toolChoice: "auto",
+  maxIterations: 5, // Limit tool calling loops (default: 5)
+})) {
+  if (chunk.type === "content") {
+    process.stdout.write(chunk.delta);
   }
-
-  if (toolCalls.length > 0) {
-    // Add assistant message with tool calls
-    messages.push({
-      role: "assistant",
-      content: null,
-      toolCalls,
-    });
-
-    // Execute tools and add results
-    for (const call of toolCalls) {
-      const result = await executeYourTool(call);
-      messages.push({
-        role: "tool",
-        content: result,
-        toolCallId: call.id,
-        name: call.function.name,
-      });
-    }
-    // Continue loop to get final response
-  }
+  // Tools are called and executed automatically - no manual handling needed!
 }
 ```
+
+**Key Features:**
+
+- ✅ Define `execute` function with each tool
+- ✅ `streamChat` automatically detects tool calls
+- ✅ Executes tools automatically
+- ✅ Adds results back to conversation
+- ✅ Continues until final response (up to `maxIterations`)
+- ✅ You just handle the stream - no manual tool logic!
 
 ### Provider-Specific Configuration
 
