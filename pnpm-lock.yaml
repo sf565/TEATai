@@ -81,6 +81,12 @@ importers:
       '@tanstack/ai-anthropic':
         specifier: workspace:*
         version: link:../../packages/ai-anthropic
+      '@tanstack/ai-ollama':
+        specifier: workspace:*
+        version: link:../../packages/ai-ollama
+      '@tanstack/ai-openai':
+        specifier: workspace:*
+        version: link:../../packages/ai-openai
       '@tanstack/ai-react':
         specifier: workspace:*
         version: link:../../packages/ai-react

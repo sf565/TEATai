@@ -11,6 +11,8 @@
   "dependencies": {
     "@tanstack/ai": "workspace:*",
     "@tanstack/ai-anthropic": "workspace:*",
+    "@tanstack/ai-ollama": "workspace:*",
+    "@tanstack/ai-openai": "workspace:*",
     "@tanstack/ai-react": "workspace:*",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/nitro-v2-vite-plugin": "^1.132.31",

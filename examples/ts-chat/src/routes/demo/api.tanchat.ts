@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AI, toStreamResponse } from "@tanstack/ai";
-import { AnthropicAdapter } from "@tanstack/ai-anthropic";
+import { OllamaAdapter } from "@tanstack/ai-ollama";
 import type { Tool } from "@tanstack/ai";
 
 import guitars from "@/data/example-guitars";
@@ -61,8 +61,8 @@ export const Route = createFileRoute("/demo/api/tanchat")({
 
           // Initialize AI with Anthropic
           const ai = new AI(
-            new AnthropicAdapter({
-              apiKey: process.env.ANTHROPIC_API_KEY!,
+            new OllamaAdapter({
+              apiKey: process.env.AI_KEY!,
             })
           );
 
@@ -74,7 +74,7 @@ export const Route = createFileRoute("/demo/api/tanchat")({
 
           // streamChat automatically handles tool execution!
           const stream = ai.streamChat({
-            model: "claude-3-5-sonnet-20241022",
+            model: "gpt-oss:20b",
             messages: allMessages,
             temperature: 0.7,
             tools,
