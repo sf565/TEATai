@@ -134,59 +134,7 @@ npm install @tanstack/ai-gemini
 npm install @tanstack/ai-react
 ```
 
-## Architecture
-
-### Core Concepts
-
-**1. Provider-Agnostic Design**
-
-All providers implement the same `AIAdapter` interface:
-
-```typescript
-interface AIAdapter {
-  // Chat
-  chatCompletion(options: ChatCompletionOptions): Promise<ChatCompletionResult>;
-  chatStream(options: ChatCompletionOptions): AsyncIterable<StreamChunk>;
-
-  // Text generation
-  generateText(options: TextGenerationOptions): Promise<TextGenerationResult>;
-
-  // Summarization
-  summarize(options: SummarizationOptions): Promise<SummarizationResult>;
-
-  // Embeddings
-  createEmbeddings(options: EmbeddingOptions): Promise<EmbeddingResult>;
-  
-  // Optional: Image, Audio, Video generation
-  generateImage?(options: ImageGenerationOptions): Promise<ImageGenerationResult>;
-  transcribeAudio?(options: AudioTranscriptionOptions): Promise<AudioTranscriptionResult>;
-  generateSpeech?(options: TextToSpeechOptions): Promise<TextToSpeechResult>;
-  generateVideo?(options: VideoGenerationOptions): Promise<VideoGenerationResult>;
-}
-```
-
-**2. Structured Streaming**
-
-Streams return typed JSON chunks instead of raw strings:
-
-```typescript
-type StreamChunk =
-  | ContentStreamChunk // Text tokens with delta + accumulated content
-  | ToolCallStreamChunk // Function call information
-  | DoneStreamChunk // Completion signal with token usage
-  | ErrorStreamChunk; // Error information
-```
-
-**3. Response Modes**
-
-The `chat()` function supports three response modes via the `as` parameter:
-
-- `as: "promise"` (default) - Returns `Promise<ChatCompletionResult>`
-- `as: "stream"` - Returns `AsyncIterable<StreamChunk>`
-- `as: "response"` - Returns `Promise<Response>` (for HTTP streaming)
-
-**Note:** The `output` parameter for structured outputs is only available in promise mode.
-
+ 
 ## API Reference
 
 ### Standalone Functions
@@ -320,7 +268,7 @@ const result = await video({
 // result.video is a Buffer or Blob
 ```
 
-### AI Class
+### AI instance
 
 #### Constructor
 
@@ -603,46 +551,7 @@ export const Route = createFileRoute("/api/chat")({
 });
 ```
 
-## Package Structure
-
-```
-@tanstack/ai/
-├── packages/
-│   ├── ai/                  # Core library
-│   │   ├── types.ts         # Type definitions
-│   │   ├── ai.ts            # AI class
-│   │   ├── standalone-functions.ts  # Standalone functions
-│   │   ├── tool-utils.ts    # Tool helpers
-│   │   ├── schema-utils.ts  # Schema helpers
-│   │   ├── base-adapter.ts  # Adapter base class
-│   │   └── stream-utils.ts  # Streaming utilities
-│   ├── ai-openai/           # OpenAI adapter
-│   ├── ai-anthropic/        # Anthropic adapter
-│   ├── ai-ollama/           # Ollama adapter
-│   ├── ai-gemini/           # Google Gemini adapter
-│   └── ai-react/            # React hooks
-│       ├── use-chat.ts      # Chat hook
-│       └── types.ts         # React-specific types
-└── examples/
-    ├── cli/                 # CLI examples
-    └── ts-chat/             # Full TanStack Start app
-```
-
-## Provider Support Matrix
-
-| Feature            | OpenAI | Anthropic | Ollama | Gemini |
-| ------------------ | ------ | --------- | ------ | ------ |
-| Chat               | ✅     | ✅        | ✅     | ✅     |
-| Streaming          | ✅     | ✅        | ✅     | ✅     |
-| Tool Calling       | ✅     | ✅        | ⏳     | ⏳     |
-| Structured Outputs | ✅     | ✅        | ⏳     | ⏳     |
-| Embeddings         | ✅     | ❌        | ✅     | ✅     |
-| Image Generation   | ✅     | ❌        | ❌     | ❌     |
-| Audio              | ✅     | ❌        | ❌     | ❌     |
-| Video              | ⏳     | ❌        | ❌     | ❌     |
-
-✅ = Fully supported | ⏳ = Planned | ❌ = Not supported by provider
-
+  
 ## Development
 
 ```bash
