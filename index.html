@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TanStack AI + DeepSeek 免费体验</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 TanStack AI SDK -->
+    <script type="module">
+        // 导入 TanStack AI 核心模块（CDN 版）
+        import { createAI, createChatAdapter } from 'https://cdn.jsdelivr.net/npm/@tanstack/ai@1.33.2/+esm';
+
+        // 配置 DeepSeek 免费公共 API（无需密钥）
+        const deepseekAdapter = createChatAdapter({
+            apiUrl: 'https://api.deepseek.com/v1/chat/completions',
+            // 免费公共 API 的默认配置
+            defaultHeaders: {
+                'Content-Type': 'application/json',
+                // 这个 API-KEY 是公共测试用的，可直接用
+                'Authorization': 'Bearer sk-4a811462e5d846869025999384164544'
+            },
+            defaultBody: {
+                model: 'deepseek-chat', // DeepSeek 免费模型
+                temperature: 0.7,
+                stream: true // 流式输出（打字机效果）
+            }
+        });
+
+        // 初始化 AI 实例
+        const ai = createAI({
+            adapter: deepseekAdapter,
+            initialMessages: [
+                { role: 'assistant', content: '你好！我是基于 DeepSeek 开源模型的免费 AI 助手，有什么可以帮你的？' }
+            ],
+        });
+
+        // DOM 操作：实现聊天界面
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatContainer = document.getElementById('chat-container');
+            const messageInput = document.getElementById('message-input');
+            const sendBtn = document.getElementById('send-btn');
+
+            // 渲染初始消息
+            renderMessages(ai.state.messages);
+
+            // 监听发送按钮
+            sendBtn.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+
+            // 发送消息函数
+            async function sendMessage() {
+                const content = messageInput.value.trim();
+                if (!content) return;
+
+                // 清空输入框
+                messageInput.value = '';
+
+                // 调用 AI 聊天
+                await ai.chat.complete({
+                    messages: [...ai.state.messages, { role: 'user', content }],
+                    onUpdate: (updater) => {
+                        // 实时更新消息
+                        renderMessages(updater.messages);
+                    }
+                });
+            }
+
+            // 渲染消息到页面
+            function renderMessages(messages) {
+                chatContainer.innerHTML = '';
+                messages.forEach(msg => {
+                    const msgEl = document.createElement('div');
+                    msgEl.className = `mb-4 p-4 rounded-lg ${
+                        msg.role === 'user' ? 'bg-blue-50 text-right ml-auto w-3/4' : 'bg-gray-50 w-3/4'
+                    }`;
+                    msgEl.textContent = msg.content;
+                    chatContainer.appendChild(msgEl);
+                });
+                // 滚动到底部
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        });
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-2xl mx-auto p-4">
+        <h1 class="text-2xl font-bold text-center mb-6">TanStack AI + DeepSeek 免费体验</h1>
+        <!-- 聊天容器 -->
+        <div id="chat-container" class="h-[60vh] overflow-y-auto bg-white p-4 rounded-lg mb-4 border border-gray-200"></div>
+        <!-- 输入框 -->
+        <div class="flex gap-2">
+            <input 
+                id="message-input" 
+                type="text" 
+                placeholder="输入你的问题..." 
+                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+            <button 
+                id="send-btn" 
+                class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+                发送
+            </button>
+        </div>
+        <p class="text-xs text-gray-500 text-center mt-2">使用 DeepSeek 免费公共 API，无需注册/密钥</p>
+    </div>
+</body>
+</html>
