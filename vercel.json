@@ -1,9 +1,21 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "index.html",
+      "use": "@vercel/static",
+      "config": {
+        "distDir": "."
+      }
+    }
+  ],
   "routes": [
     {
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "outputDirectory": ".",
+  "installCommand": "echo 'Skip install'",
+  "buildCommand": "mkdir -p public && cp index.html public/index.html"
 }
