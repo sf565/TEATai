@@ -1,21 +1,11 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "packages/python-fastapi/main.py",  // 核心：FastAPI 入口文件路径（根据你仓库实际结构调整）
-      "use": "@vercel/python@latest",            // 指定 Vercel 使用 Python 运行时
-      "config": {
-        "maxLambdaSize": "15mb",
-        "runtime": "python3.11"                  // 匹配 FastAPI 常用的 Python 版本
-      }
-    }
-  ],
   "routes": [
     {
-      "src": "/(.*)",                            // 所有请求都转发到 FastAPI 服务
-      "dest": "packages/python-fastapi/main.py"  // 和上面的入口文件路径保持一致
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ],
-  "installCommand": "pnpm install --ignore-scripts",  // 复用之前的安装命令，避开 Playwright
-  "buildCommand": "pip install -r packages/python-fastapi/requirements.txt"  // 安装 Python 依赖
+  "installCommand": "echo 'No dependencies to install'",
+  "buildCommand": "echo 'Build completed'"
 }
